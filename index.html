@@ -164,6 +164,19 @@
     </div>
   </section>
 
+  <!-- DENEME SEANSI CTA -->
+  <section class="trial-cta">
+    <div class="container">
+      <div class="trial-cta__inner">
+        <div>
+          <h2>Ücretsiz tanışma görüşmesi</h2>
+          <p>15 dakika, hiçbir taahhüt olmadan. Sizi dinleyeyim, birlikte bakalım.</p>
+        </div>
+        <button class="btn btn--primary" id="openBooking">Başvur</button>
+      </div>
+    </div>
+  </section>
+
   <!-- NASIL ÇALIŞIR -->
   <section class="how" id="nasil-calisir">
     <div class="container">
@@ -234,10 +247,6 @@
           <h2 class="section__title">Yazın, görüşelim.</h2>
           <p>Formu doldurun ya da direkt ulaşın. Tanışma görüşmesi ücretsiz.</p>
           <div class="contact__channels">
-            <a href="mailto:ozereeece@gmail.com" class="contact__channel">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-              <span>ozereeece@gmail.com</span>
-            </a>
             <a href="https://wa.me/905399138233" target="_blank" class="contact__channel">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               <span>WhatsApp'tan yaz</span>
@@ -271,6 +280,99 @@
     </div>
   </section>
 
+  <!-- BOOKING MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <button class="modal__close" id="closeModal" aria-label="Kapat">✕</button>
+
+      <!-- Adım göstergesi -->
+      <div class="modal__steps">
+        <div class="modal__step active" data-step="1">1</div>
+        <div class="modal__step-line"></div>
+        <div class="modal__step" data-step="2">2</div>
+        <div class="modal__step-line"></div>
+        <div class="modal__step" data-step="3">3</div>
+      </div>
+
+      <!-- ADIM 1: Quiz -->
+      <div class="modal__page" id="step1">
+        <h3>Sizi biraz tanıyalım</h3>
+        <p class="modal__sub">3 kısa soru — cevaplar randevu öncesi size daha iyi hazırlanmamı sağlar.</p>
+
+        <div class="quiz__question">
+          <p class="quiz__label">Şu an en çok ne üzerine destek almak istiyorsunuz?</p>
+          <div class="quiz__options" id="q1">
+            <label class="quiz__option"><input type="radio" name="q1" value="Kaygı / Stres" /><span>Kaygı / Stres</span></label>
+            <label class="quiz__option"><input type="radio" name="q1" value="İlişki sorunları" /><span>İlişki sorunları</span></label>
+            <label class="quiz__option"><input type="radio" name="q1" value="Özgüven / Sınır koyma" /><span>Özgüven / Sınır koyma</span></label>
+            <label class="quiz__option"><input type="radio" name="q1" value="Yas veya kayıp" /><span>Yas veya kayıp</span></label>
+            <label class="quiz__option"><input type="radio" name="q1" value="Henüz bilmiyorum" /><span>Henüz bilmiyorum</span></label>
+          </div>
+        </div>
+
+        <div class="quiz__question">
+          <p class="quiz__label">Daha önce psikolojik destek aldınız mı?</p>
+          <div class="quiz__options" id="q2">
+            <label class="quiz__option"><input type="radio" name="q2" value="Hayır, ilk kez düşünüyorum" /><span>Hayır, ilk kez düşünüyorum</span></label>
+            <label class="quiz__option"><input type="radio" name="q2" value="Evet, daha önce aldım" /><span>Evet, daha önce aldım</span></label>
+            <label class="quiz__option"><input type="radio" name="q2" value="Aldım ama bir süredir almıyorum" /><span>Aldım ama bir süredir almıyorum</span></label>
+          </div>
+        </div>
+
+        <div class="quiz__question">
+          <p class="quiz__label">Seanslar için hangi saatler genellikle uygun?</p>
+          <div class="quiz__options" id="q3">
+            <label class="quiz__option"><input type="radio" name="q3" value="Sabah (09:00–12:00)" /><span>Sabah (09:00–12:00)</span></label>
+            <label class="quiz__option"><input type="radio" name="q3" value="Öğleden sonra (12:00–17:00)" /><span>Öğleden sonra (12:00–17:00)</span></label>
+            <label class="quiz__option"><input type="radio" name="q3" value="Akşam (17:00–21:00)" /><span>Akşam (17:00–21:00)</span></label>
+          </div>
+        </div>
+
+        <button class="btn btn--primary btn--full" id="toStep2">Devam Et</button>
+        <p class="quiz__error" id="quizError">Lütfen tüm soruları cevaplayın.</p>
+      </div>
+
+      <!-- ADIM 2: Kişisel bilgiler -->
+      <div class="modal__page hidden" id="step2">
+        <h3>İletişim bilgileriniz</h3>
+        <p class="modal__sub">Size en kısa sürede dönüş yapacağım.</p>
+
+        <div class="form__group">
+          <label for="b_name">Ad Soyad</label>
+          <input type="text" id="b_name" placeholder="Adınız Soyadınız" />
+        </div>
+        <div class="form__group">
+          <label for="b_email">E-posta</label>
+          <input type="email" id="b_email" placeholder="ornek@email.com" />
+        </div>
+        <div class="form__group">
+          <label for="b_phone">Telefon (isteğe bağlı)</label>
+          <input type="tel" id="b_phone" placeholder="0530 000 00 00" />
+        </div>
+        <div class="form__group">
+          <label for="b_message">Eklemek istediğiniz bir şey var mı? (isteğe bağlı)</label>
+          <textarea id="b_message" rows="3" placeholder="..."></textarea>
+        </div>
+
+        <div class="modal__actions">
+          <button class="btn btn--ghost" id="toStep1">Geri</button>
+          <button class="btn btn--primary" id="submitBooking">Gönder</button>
+        </div>
+        <p class="quiz__error" id="formError">Lütfen ad ve e-posta alanlarını doldurun.</p>
+      </div>
+
+      <!-- ADIM 3: Teşekkür -->
+      <div class="modal__page hidden" id="step3">
+        <div class="modal__success">
+          <div class="modal__success-icon">✓</div>
+          <h3>Başvurunuz alındı</h3>
+          <p>En kısa sürede size dönüş yapacağım. WhatsApp'tan da ulaşabilirsiniz.</p>
+          <a href="https://wa.me/905399138233" target="_blank" class="btn btn--primary" style="margin-top:1.5rem">WhatsApp'tan yaz</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
@@ -281,6 +383,7 @@
     </div>
   </footer>
 
+  <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
