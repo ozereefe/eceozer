@@ -17,6 +17,23 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
   this.reset();
 });
 
+// ── Mailchimp abone ───────────────────────────────────────
+function subscribeToMailchimp(email) {
+  return new Promise((resolve) => {
+    const cb = 'mc_cb_' + Date.now();
+    const script = document.createElement('script');
+    window[cb] = (data) => {
+      delete window[cb];
+      script.remove();
+      resolve(data);
+    };
+    const { baseUrl, u, id } = CONFIG.mailchimp;
+    script.src = `${baseUrl}?u=${u}&id=${id}&EMAIL=${encodeURIComponent(email)}&c=${cb}`;
+    document.body.appendChild(script);
+    setTimeout(() => { if (window[cb]) { delete window[cb]; script.remove(); resolve(null); } }, 5000);
+  });
+}
+
 // ── Supabase kayıt ────────────────────────────────────────
 async function saveToSupabase(data) {
   const res = await fetch(`${CONFIG.supabase.url}/rest/v1/trial_sessions`, {
@@ -114,15 +131,18 @@ document.getElementById('submitBooking').addEventListener('click', async () => {
   submitBtn.disabled = true;
 
   try {
-    await saveToSupabase({
-      name,
-      email,
-      phone:               document.getElementById('b_phone').value.trim() || null,
-      topic:               q1,
-      therapy_experience:  q2,
-      availability:        q3,
-      message:             document.getElementById('b_message').value.trim() || null,
-    });
+    await Promise.all([
+      saveToSupabase({
+        name,
+        email,
+        phone:               document.getElementById('b_phone').value.trim() || null,
+        topic:               q1,
+        therapy_experience:  q2,
+        availability:        q3,
+        message:             document.getElementById('b_message').value.trim() || null,
+      }),
+      subscribeToMailchimp(email),
+    ]);
     goToStep(3);
   } catch (e) {
     alert('Bir hata oluştu, lütfen WhatsApp\'tan ulaşın.');
