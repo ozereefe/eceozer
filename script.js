@@ -88,16 +88,38 @@ attachBlur(cEmail,   'email-err',   validateEmail);
 attachBlur(cPhone,   'phone-err',   validatePhone);
 attachBlur(cMessage, 'message-err', validateMessage);
 
-document.getElementById('contactForm').addEventListener('submit', function(e) {
+document.getElementById('contactForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   const v1 = showErr(cName,    'name-err',    validateName(cName.value));
   const v2 = showErr(cEmail,   'email-err',   validateEmail(cEmail.value));
   const v3 = showErr(cPhone,   'phone-err',   validatePhone(cPhone.value));
   const v4 = showErr(cMessage, 'message-err', validateMessage(cMessage.value));
   if (!v1 || !v2 || !v3 || !v4) return;
-  document.getElementById('formSuccess').classList.add('visible');
-  this.reset();
-  [cName, cEmail, cPhone, cMessage].forEach(el => el.classList.remove('valid'));
+
+  const submitBtn = this.querySelector('button[type=submit]');
+  submitBtn.textContent = 'Gönderiliyor...';
+  submitBtn.disabled = true;
+
+  try {
+    await Promise.all([
+      saveToSupabase({
+        name:    cName.value.trim(),
+        email:   cEmail.value.trim(),
+        phone:   cPhone.value.trim() || null,
+        message: cMessage.value.trim(),
+        topic:   'İletişim formu',
+      }),
+      subscribeToMailchimp(cEmail.value.trim()),
+    ]);
+    document.getElementById('formSuccess').classList.add('visible');
+    this.reset();
+    [cName, cEmail, cPhone, cMessage].forEach(el => el.classList.remove('valid'));
+  } catch {
+    alert('Bir hata oluştu, lütfen WhatsApp\'tan ulaşın.');
+  } finally {
+    submitBtn.textContent = 'Gönder';
+    submitBtn.disabled = false;
+  }
 });
 
 // ── Mailchimp ─────────────────────────────────────────────
