@@ -1,716 +1,133 @@
-/* ── Reset & Base ─────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+// ── Nav scroll ────────────────────────────────────────────
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 20);
+});
 
-:root {
-  --sage:    #7a9e87;
-  --sage-lt: #d4e8da;
-  --sage-dk: #4e7a60;
-  --cream:   #faf7f2;
-  --stone:   #f0ebe3;
-  --ink:     #1e1e1e;
-  --ink-lt:  #5a5a5a;
-  --white:   #ffffff;
-  --radius:  14px;
-  --shadow:  0 4px 24px rgba(0,0,0,.08);
-  --font-serif: 'Lora', Georgia, serif;
-  --font-sans:  'Inter', system-ui, sans-serif;
-}
+// ── Hamburger ─────────────────────────────────────────────
+const hamburger = document.getElementById('hamburger');
+const navLinks  = document.querySelector('.nav__links');
+hamburger.addEventListener('click', () => navLinks.classList.toggle('open'));
+navLinks.querySelectorAll('a').forEach(l => l.addEventListener('click', () => navLinks.classList.remove('open')));
 
-html { scroll-behavior: smooth; }
+// ── İletişim formu (basit) ────────────────────────────────
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  document.getElementById('formSuccess').classList.add('visible');
+  this.reset();
+});
 
-body {
-  font-family: var(--font-sans);
-  background: var(--cream);
-  color: var(--ink);
-  line-height: 1.7;
-  font-size: 16px;
-}
-
-img { max-width: 100%; display: block; }
-a { text-decoration: none; color: inherit; }
-
-.container {
-  width: min(1120px, 92%);
-  margin-inline: auto;
+// ── Supabase kayıt ────────────────────────────────────────
+async function saveToSupabase(data) {
+  const res = await fetch(`${CONFIG.supabase.url}/rest/v1/trial_sessions`, {
+    method: 'POST',
+    headers: {
+      'apikey': CONFIG.supabase.anonKey,
+      'Authorization': `Bearer ${CONFIG.supabase.anonKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('Supabase kayıt hatası');
 }
 
-/* ── Buttons ──────────────────────────────────────────────── */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .5rem;
-  padding: .85rem 2rem;
-  border-radius: 50px;
-  font-family: var(--font-sans);
-  font-size: .95rem;
-  font-weight: 500;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: all .25s ease;
+// ── Modal ─────────────────────────────────────────────────
+const overlay    = document.getElementById('modalOverlay');
+const openBtn    = document.getElementById('openBooking');
+const closeBtn   = document.getElementById('closeModal');
+
+function openModal() {
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  resetModal();
 }
 
-.btn--primary {
-  background: var(--sage-dk);
-  color: var(--white);
-}
-.btn--primary:hover { background: var(--sage); }
+openBtn.addEventListener('click', openModal);
+closeBtn.addEventListener('click', closeModal);
+overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-.btn--ghost {
-  background: transparent;
-  border-color: var(--sage-dk);
-  color: var(--sage-dk);
-}
-.btn--ghost:hover { background: var(--sage-dk); color: var(--white); }
+// ── Adım yönetimi ─────────────────────────────────────────
+let currentStep = 1;
 
-.btn--full { width: 100%; }
+function goToStep(n) {
+  document.getElementById(`step${currentStep}`).classList.add('hidden');
+  document.getElementById(`step${n}`).classList.remove('hidden');
 
-/* ── Section helpers ──────────────────────────────────────── */
-.section__eyebrow {
-  font-size: .8rem;
-  font-weight: 600;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: var(--sage-dk);
-  margin-bottom: .6rem;
+  document.querySelectorAll('.modal__step').forEach(el => {
+    const s = parseInt(el.dataset.step);
+    el.classList.remove('active', 'done');
+    if (s === n)    el.classList.add('active');
+    if (s < n)      el.classList.add('done');
+  });
+
+  currentStep = n;
 }
 
-.section__title {
-  font-family: var(--font-serif);
-  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
-  font-weight: 600;
-  line-height: 1.25;
-  color: var(--ink);
-  margin-bottom: 1rem;
+function resetModal() {
+  goToStep(1);
+  document.querySelectorAll('.modal input, .modal textarea').forEach(el => el.value = '');
+  document.querySelectorAll('.quiz__error').forEach(el => el.classList.remove('visible'));
 }
 
-.section__desc {
-  color: var(--ink-lt);
-  max-width: 540px;
-  margin-inline: auto;
-}
+// ── Quiz → Adım 2 ─────────────────────────────────────────
+document.getElementById('toStep2').addEventListener('click', () => {
+  const q1 = document.querySelector('input[name="q1"]:checked');
+  const q2 = document.querySelector('input[name="q2"]:checked');
+  const q3 = document.querySelector('input[name="q3"]:checked');
+  const err = document.getElementById('quizError');
 
-.section__header {
-  text-align: center;
-  margin-bottom: 3.5rem;
-}
-
-/* ── Nav ──────────────────────────────────────────────────── */
-.nav {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 100;
-  padding: 1rem 0;
-  background: rgba(250, 247, 242, .85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid transparent;
-  transition: border-color .3s, box-shadow .3s;
-}
-
-.nav.scrolled {
-  border-color: rgba(0,0,0,.07);
-  box-shadow: 0 2px 12px rgba(0,0,0,.06);
-}
-
-.nav__inner {
-  width: min(1120px, 92%);
-  margin-inline: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.nav__logo {
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--ink);
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-}
-.nav__logo span {
-  font-size: .7rem;
-  font-family: var(--font-sans);
-  font-weight: 400;
-  color: var(--sage-dk);
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
-.nav__links {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-}
-.nav__links a {
-  font-size: .9rem;
-  color: var(--ink-lt);
-  transition: color .2s;
-}
-.nav__links a:hover { color: var(--ink); }
-
-.nav__cta {
-  background: var(--sage-dk);
-  color: var(--white) !important;
-  padding: .5rem 1.3rem;
-  border-radius: 50px;
-  font-size: .85rem !important;
-  font-weight: 500;
-  transition: background .2s !important;
-}
-.nav__cta:hover { background: var(--sage) !important; }
-
-.nav__hamburger {
-  display: none;
-  flex-direction: column;
-  gap: 5px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-}
-.nav__hamburger span {
-  display: block;
-  width: 22px;
-  height: 2px;
-  background: var(--ink);
-  border-radius: 2px;
-  transition: all .3s;
-}
-
-/* ── Hero ─────────────────────────────────────────────────── */
-.hero {
-  min-height: 100svh;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  gap: 2rem;
-  padding: 8rem 0 5rem;
-  width: min(1120px, 92%);
-  margin-inline: auto;
-}
-
-.hero__eyebrow {
-  display: inline-block;
-  background: var(--sage-lt);
-  color: var(--sage-dk);
-  font-size: .78rem;
-  font-weight: 600;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  padding: .35rem .9rem;
-  border-radius: 50px;
-  margin-bottom: 1.2rem;
-}
-
-.hero__title {
-  font-family: var(--font-serif);
-  font-size: clamp(2.2rem, 4.5vw, 3.4rem);
-  font-weight: 600;
-  line-height: 1.2;
-  margin-bottom: 1.2rem;
-}
-.hero__title em {
-  font-style: italic;
-  color: var(--sage-dk);
-}
-
-.hero__subtitle {
-  color: var(--ink-lt);
-  font-size: 1.05rem;
-  max-width: 480px;
-  margin-bottom: 2rem;
-}
-
-.hero__actions {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.hero__visual {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-}
-
-.hero__blob {
-  width: 380px;
-  height: 380px;
-  background: linear-gradient(135deg, var(--sage-lt) 0%, #c9dfd1 60%, #b5d4bf 100%);
-  border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
-  animation: blobMorph 8s ease-in-out infinite;
-}
-
-@keyframes blobMorph {
-  0%, 100% { border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%; }
-  50%       { border-radius: 40% 60% 45% 55% / 60% 40% 60% 40%; }
-}
-
-.hero__card {
-  position: absolute;
-  bottom: 10%;
-  left: 0;
-  background: var(--white);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1rem 1.4rem;
-  display: flex;
-  align-items: center;
-  gap: .8rem;
-  font-size: .85rem;
-  line-height: 1.4;
-}
-.hero__card-icon { font-size: 1.5rem; }
-.hero__card-text { color: var(--ink-lt); }
-
-/* ── About ────────────────────────────────────────────────── */
-.about {
-  padding: 6rem 0;
-  background: var(--white);
-}
-
-.about__grid {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 4rem;
-  align-items: start;
-}
-
-.about__image-wrap {
-  position: relative;
-}
-
-.about__image-placeholder {
-  width: 100%;
-  aspect-ratio: 3/4;
-  background: linear-gradient(145deg, var(--sage-lt), var(--sage));
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-serif);
-  font-size: 4rem;
-  color: var(--white);
-  font-weight: 600;
-}
-
-.about__badge {
-  position: absolute;
-  bottom: -1rem;
-  right: -1rem;
-  background: var(--white);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: .8rem 1.2rem;
-  display: flex;
-  flex-direction: column;
-  gap: .1rem;
-}
-.about__badge strong { font-size: .9rem; color: var(--ink); }
-.about__badge small  { font-size: .75rem; color: var(--sage-dk); }
-
-.about__text p {
-  color: var(--ink-lt);
-  margin-bottom: 1rem;
-}
-
-.about__list {
-  list-style: none;
-  margin-top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: .6rem;
-}
-.about__list li {
-  font-size: .9rem;
-  color: var(--ink);
-}
-
-/* ── Autism ───────────────────────────────────────────────── */
-.autism {
-  padding: 6rem 0;
-  background: var(--white);
-}
-
-.autism__grid {
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 4rem;
-  align-items: start;
-}
-
-.autism__text p {
-  color: var(--ink-lt);
-  margin-bottom: 1rem;
-}
-
-.autism__list {
-  list-style: none;
-  margin-top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: .6rem;
-}
-.autism__list li {
-  font-size: .9rem;
-  color: var(--ink);
-  padding-left: 1rem;
-  position: relative;
-}
-.autism__list li::before {
-  content: '—';
-  position: absolute;
-  left: 0;
-  color: var(--sage-dk);
-}
-
-.autism__card {
-  background: var(--sage-dk);
-  color: var(--white);
-  border-radius: 20px;
-  padding: 2.2rem;
-  position: sticky;
-  top: 100px;
-}
-
-.autism__quote {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 1.1rem;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-  color: var(--white);
-}
-
-.autism__note {
-  font-size: .85rem;
-  color: rgba(255,255,255,.7);
-  border-top: 1px solid rgba(255,255,255,.2);
-  padding-top: 1rem;
-}
-
-@media (max-width: 900px) {
-  .autism__grid {
-    grid-template-columns: 1fr;
+  if (!q1 || !q2 || !q3) {
+    err.classList.add('visible');
+    return;
   }
-  .autism__card {
-    position: static;
+  err.classList.remove('visible');
+  goToStep(2);
+});
+
+// ── Adım 1'e dön ──────────────────────────────────────────
+document.getElementById('toStep1').addEventListener('click', () => goToStep(1));
+
+// ── Formu gönder ──────────────────────────────────────────
+document.getElementById('submitBooking').addEventListener('click', async () => {
+  const name  = document.getElementById('b_name').value.trim();
+  const email = document.getElementById('b_email').value.trim();
+  const err   = document.getElementById('formError');
+
+  if (!name || !email) {
+    err.classList.add('visible');
+    return;
   }
-}
+  err.classList.remove('visible');
 
-/* ── Services ─────────────────────────────────────────────── */
-.services {
-  padding: 6rem 0;
-  background: var(--cream);
-}
+  const q1 = document.querySelector('input[name="q1"]:checked').value;
+  const q2 = document.querySelector('input[name="q2"]:checked').value;
+  const q3 = document.querySelector('input[name="q3"]:checked').value;
 
-.services__grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-}
+  const submitBtn = document.getElementById('submitBooking');
+  submitBtn.textContent = 'Gönderiliyor...';
+  submitBtn.disabled = true;
 
-.service-card {
-  background: var(--white);
-  border-radius: var(--radius);
-  padding: 2rem 1.8rem;
-  border: 1px solid rgba(0,0,0,.05);
-  transition: transform .25s, box-shadow .25s;
-}
-.service-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow);
-}
-.service-card__icon { font-size: 2rem; margin-bottom: 1rem; }
-.service-card h3 {
-  font-family: var(--font-serif);
-  font-size: 1.05rem;
-  font-weight: 600;
-  margin-bottom: .6rem;
-}
-.service-card p { font-size: .9rem; color: var(--ink-lt); }
-
-/* ── How it works ─────────────────────────────────────────── */
-.how {
-  padding: 6rem 0;
-  background: var(--sage-dk);
-  color: var(--white);
-}
-.how .section__eyebrow { color: var(--sage-lt); }
-.how .section__title   { color: var(--white); }
-
-.how__steps {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.how__step {
-  flex: 1;
-  min-width: 220px;
-  max-width: 300px;
-  text-align: center;
-}
-
-.how__step-num {
-  font-family: var(--font-serif);
-  font-size: 3rem;
-  font-weight: 600;
-  color: rgba(255,255,255,.25);
-  line-height: 1;
-  margin-bottom: .6rem;
-}
-
-.how__step h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: .5rem;
-}
-.how__step p { font-size: .9rem; color: rgba(255,255,255,.75); }
-
-.how__arrow {
-  font-size: 1.5rem;
-  color: rgba(255,255,255,.3);
-  align-self: center;
-  padding-bottom: 3rem;
-}
-
-.how__note {
-  margin-top: 3rem;
-  text-align: center;
-  background: rgba(255,255,255,.1);
-  border-radius: var(--radius);
-  padding: 1rem 1.5rem;
-  font-size: .9rem;
-  color: rgba(255,255,255,.85);
-  max-width: 520px;
-  margin-inline: auto;
-  margin-top: 3rem;
-}
-
-/* ── FAQ ──────────────────────────────────────────────────── */
-.faq {
-  padding: 6rem 0;
-  background: var(--stone);
-}
-
-.faq__list {
-  max-width: 680px;
-  margin-inline: auto;
-  display: flex;
-  flex-direction: column;
-  gap: .8rem;
-}
-
-.faq__item {
-  background: var(--white);
-  border-radius: var(--radius);
-  border: 1px solid rgba(0,0,0,.06);
-  overflow: hidden;
-}
-
-.faq__item summary {
-  padding: 1.2rem 1.5rem;
-  font-weight: 500;
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  user-select: none;
-}
-.faq__item summary::-webkit-details-marker { display: none; }
-.faq__item summary::after {
-  content: '+';
-  font-size: 1.2rem;
-  color: var(--sage-dk);
-  transition: transform .25s;
-  flex-shrink: 0;
-}
-.faq__item[open] summary::after {
-  transform: rotate(45deg);
-}
-
-.faq__item p {
-  padding: 0 1.5rem 1.2rem;
-  font-size: .9rem;
-  color: var(--ink-lt);
-}
-
-/* ── Contact ──────────────────────────────────────────────── */
-.contact {
-  padding: 6rem 0;
-  background: var(--white);
-}
-
-.contact__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
-  align-items: start;
-}
-
-.contact__info p {
-  color: var(--ink-lt);
-  margin-bottom: 1.5rem;
-}
-
-.contact__channels {
-  display: flex;
-  flex-direction: column;
-  gap: .8rem;
-  margin-top: 2rem;
-}
-
-.contact__channel {
-  display: flex;
-  align-items: center;
-  gap: .8rem;
-  font-size: .95rem;
-  color: var(--ink);
-  padding: .8rem 1.2rem;
-  background: var(--stone);
-  border-radius: var(--radius);
-  transition: background .2s;
-}
-.contact__channel:hover { background: var(--sage-lt); }
-.contact__channel span:first-child { font-size: 1.2rem; }
-
-/* Form */
-.contact__form {
-  background: var(--cream);
-  border-radius: 20px;
-  padding: 2.5rem;
-  border: 1px solid rgba(0,0,0,.06);
-}
-
-.form__group {
-  margin-bottom: 1.2rem;
-}
-.form__group label {
-  display: block;
-  font-size: .85rem;
-  font-weight: 500;
-  margin-bottom: .4rem;
-  color: var(--ink);
-}
-.form__group input,
-.form__group textarea {
-  width: 100%;
-  padding: .75rem 1rem;
-  border: 1.5px solid rgba(0,0,0,.1);
-  border-radius: 10px;
-  font-family: var(--font-sans);
-  font-size: .9rem;
-  background: var(--white);
-  color: var(--ink);
-  transition: border-color .2s;
-  outline: none;
-  resize: vertical;
-}
-.form__group input:focus,
-.form__group textarea:focus {
-  border-color: var(--sage-dk);
-}
-
-.form__note {
-  text-align: center;
-  font-size: .78rem;
-  color: var(--ink-lt);
-  margin-top: .8rem;
-}
-
-.form__success {
-  display: none;
-  margin-top: 1rem;
-  padding: 1rem;
-  background: var(--sage-lt);
-  color: var(--sage-dk);
-  border-radius: var(--radius);
-  text-align: center;
-  font-size: .9rem;
-  font-weight: 500;
-}
-.form__success.visible { display: block; }
-
-/* ── Footer ───────────────────────────────────────────────── */
-.footer {
-  background: var(--ink);
-  color: rgba(255,255,255,.6);
-  padding: 2rem 0;
-}
-
-.footer__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.footer__name {
-  font-family: var(--font-serif);
-  color: var(--white);
-  font-size: 1rem;
-}
-
-.footer__copy {
-  font-size: .78rem;
-  max-width: 600px;
-}
-
-/* ── Responsive ───────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .hero {
-    grid-template-columns: 1fr;
-    text-align: center;
-    padding-top: 7rem;
+  try {
+    await saveToSupabase({
+      name,
+      email,
+      phone:               document.getElementById('b_phone').value.trim() || null,
+      topic:               q1,
+      therapy_experience:  q2,
+      availability:        q3,
+      message:             document.getElementById('b_message').value.trim() || null,
+    });
+    goToStep(3);
+  } catch (e) {
+    alert('Bir hata oluştu, lütfen WhatsApp\'tan ulaşın.');
+  } finally {
+    submitBtn.textContent = 'Gönder';
+    submitBtn.disabled = false;
   }
-  .hero__subtitle { margin-inline: auto; }
-  .hero__actions  { justify-content: center; }
-  .hero__visual   { display: none; }
-
-  .about__grid {
-    grid-template-columns: 1fr;
-  }
-  .about__image-placeholder {
-    aspect-ratio: 1;
-    max-width: 280px;
-    margin-inline: auto;
-  }
-  .about__badge { right: calc(50% - 180px); }
-
-  .services__grid { grid-template-columns: 1fr 1fr; }
-
-  .contact__grid { grid-template-columns: 1fr; }
-
-  .footer__inner { flex-direction: column; text-align: center; }
-}
-
-@media (max-width: 600px) {
-  .nav__links { display: none; }
-  .nav__links.open {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 64px; left: 0; right: 0;
-    background: var(--cream);
-    padding: 1.5rem 2rem 2rem;
-    border-bottom: 1px solid rgba(0,0,0,.08);
-    gap: 1.2rem;
-    box-shadow: 0 8px 24px rgba(0,0,0,.08);
-  }
-  .nav__hamburger { display: flex; }
-
-  .services__grid { grid-template-columns: 1fr; }
-  .how__arrow { display: none; }
-
-  .contact__form { padding: 1.5rem; }
-}
+});
