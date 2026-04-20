@@ -620,6 +620,30 @@ a { text-decoration: none; color: inherit; }
   border-color: var(--sage-dk);
 }
 
+.label-opt {
+  font-weight: 400;
+  color: var(--ink-lt);
+  font-size: .8rem;
+}
+
+.field-error {
+  display: block;
+  font-size: .78rem;
+  color: #c0392b;
+  margin-top: .3rem;
+  min-height: 1rem;
+}
+
+.form__group input.invalid,
+.form__group textarea.invalid {
+  border-color: #e74c3c;
+}
+
+.form__group input.valid,
+.form__group textarea.valid {
+  border-color: var(--sage-dk);
+}
+
 .form__note {
   text-align: center;
   font-size: .78rem;

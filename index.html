@@ -253,22 +253,26 @@
             </a>
           </div>
         </div>
-        <form class="contact__form" id="contactForm">
+        <form class="contact__form" id="contactForm" novalidate>
           <div class="form__group">
             <label for="name">Ad Soyad</label>
-            <input type="text" id="name" name="name" placeholder="Adınız Soyadınız" required />
+            <input type="text" id="name" name="name" placeholder="Adınız Soyadınız" autocomplete="name" />
+            <span class="field-error" id="name-err"></span>
           </div>
           <div class="form__group">
             <label for="email">E-posta</label>
-            <input type="email" id="email" name="email" placeholder="ornek@email.com" required />
+            <input type="email" id="email" name="email" placeholder="ornek@email.com" autocomplete="email" />
+            <span class="field-error" id="email-err"></span>
           </div>
           <div class="form__group">
-            <label for="phone">Telefon (isteğe bağlı)</label>
-            <input type="tel" id="phone" name="phone" placeholder="0530 000 00 00" />
+            <label for="phone">Telefon <span class="label-opt">(isteğe bağlı)</span></label>
+            <input type="tel" id="phone" name="phone" placeholder="0530 000 00 00" autocomplete="tel" />
+            <span class="field-error" id="phone-err"></span>
           </div>
           <div class="form__group">
             <label for="message">Mesajınız</label>
-            <textarea id="message" name="message" rows="4" placeholder="Ne üzerine çalışmak istediğinizi kısaca yazabilirsiniz." required></textarea>
+            <textarea id="message" name="message" rows="4" placeholder="Ne üzerine çalışmak istediğinizi kısaca yazabilirsiniz."></textarea>
+            <span class="field-error" id="message-err"></span>
           </div>
           <button type="submit" class="btn btn--primary btn--full">Gönder</button>
           <p class="form__note">Bilgileriniz gizli tutulur.</p>
@@ -339,18 +343,21 @@
 
         <div class="form__group">
           <label for="b_name">Ad Soyad</label>
-          <input type="text" id="b_name" placeholder="Adınız Soyadınız" />
+          <input type="text" id="b_name" placeholder="Adınız Soyadınız" autocomplete="name" />
+          <span class="field-error" id="b_name-err"></span>
         </div>
         <div class="form__group">
           <label for="b_email">E-posta</label>
-          <input type="email" id="b_email" placeholder="ornek@email.com" />
+          <input type="email" id="b_email" placeholder="ornek@email.com" autocomplete="email" />
+          <span class="field-error" id="b_email-err"></span>
         </div>
         <div class="form__group">
-          <label for="b_phone">Telefon (isteğe bağlı)</label>
-          <input type="tel" id="b_phone" placeholder="0530 000 00 00" />
+          <label for="b_phone">Telefon <span class="label-opt">(isteğe bağlı)</span></label>
+          <input type="tel" id="b_phone" placeholder="0530 000 00 00" autocomplete="tel" />
+          <span class="field-error" id="b_phone-err"></span>
         </div>
         <div class="form__group">
-          <label for="b_message">Eklemek istediğiniz bir şey var mı? (isteğe bağlı)</label>
+          <label for="b_message">Eklemek istediğiniz bir şey var mı? <span class="label-opt">(isteğe bağlı)</span></label>
           <textarea id="b_message" rows="3" placeholder="..."></textarea>
         </div>
 
@@ -358,7 +365,6 @@
           <button class="btn btn--ghost" id="toStep1">Geri</button>
           <button class="btn btn--primary" id="submitBooking">Gönder</button>
         </div>
-        <p class="quiz__error" id="formError">Lütfen ad ve e-posta alanlarını doldurun.</p>
       </div>
 
       <!-- ADIM 3: Teşekkür -->
